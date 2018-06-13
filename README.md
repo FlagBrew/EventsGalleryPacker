@@ -5,5 +5,5 @@ Packs [EventsGallery](https://github.com/projectpokemon/EventsGallery) data into
 # Requirements
 
 ```
-pip3 -install gitpython
+pip3 install gitpython
 ```
