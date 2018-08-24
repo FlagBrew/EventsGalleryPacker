@@ -4,8 +4,8 @@ import os
 import json
 import struct
 
-def decryptWC4(wc4):
-	return bytearray(wc4[0x8:0x8 + 136])
+def getWC4(data):
+	return bytearray(data[0x8:0x8 + 136])
 
 # create out directory
 try:
@@ -63,7 +63,7 @@ for gen in range (4, 7+1):
 					entry['form'] = -1 if tempdata[0xB3] != 1 else tempdata[0x1C]
 				elif type == 'wc4':
 					if tempdata[0] == 1 or tempdata[0] == 2:
-						pk4 = decryptWC4(tempdata)
+						pk4 = getWC4(tempdata)
 						entry['species'] = struct.unpack('<H', pk4[0x8:0x0A])[0]
 						entry['form'] = pk4[0x40] >> 3
 					elif tempdata[0] == 7:
@@ -76,7 +76,7 @@ for gen in range (4, 7+1):
 				data += tempdata
 		
 	# export sheet	
-	sheet_data = json.dumps(sheet, indent=2)
+	sheet_data = json.dumps(sheet)
 	with open("./out/sheet{}.json".format(gen), 'w') as f:
 		f.write(sheet_data)
 
