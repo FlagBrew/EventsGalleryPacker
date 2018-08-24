@@ -5,25 +5,7 @@ import json
 import struct
 
 def decryptWC4(wc4):
-	pk4 = bytearray(wc4[0x8:0x8 + 136])
-	checksum = struct.unpack('<H', pk4[0x6:0x8])[0]
-	for i in range(0x8, 4 * 32 + 8, 2):
-		checksum = ((checksum * 0x41C64E6D + 0x6073) & 0xFFFFFFFF);
-		pk4[i] ^= ((checksum >> 16) & 0xFF)
-		pk4[i + 1] ^= (checksum >> 24)
-	
-	seed = (((struct.unpack('<I', pk4[:0x4])[0] >> 0xD) & 0x1F) % 24)
-	aloc = [ 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 2, 3, 1, 1, 2, 3, 2, 3, 1, 1, 2, 3, 2, 3 ]
-	bloc = [ 1, 1, 2, 3, 2, 3, 0, 0, 0, 0, 0, 0, 2, 3, 1, 1, 3, 2, 2, 3, 1, 1, 3, 2 ]
-	cloc = [ 2, 3, 1, 1, 3, 2, 2, 3, 1, 1, 3, 2, 0, 0, 0, 0, 0, 0, 3, 2, 3, 2, 1, 1 ]
-	dloc = [ 3, 2, 3, 2, 1, 1, 3, 2, 3, 2, 1, 1, 3, 2, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0 ]
-	ord = [ aloc[seed], bloc[seed], cloc[seed], dloc[seed] ]
-	
-	cpk4 = bytearray(pk4)
-	for i in range(4):
-		pk4[8 + 32 * i : 40 + 32 * i] = cpk4[32 * ord[i] + 8 : 32 * ord[i] + 40]
-	
-	return pk4
+	return bytearray(wc4[0x8:0x8 + 136])
 
 # create out directory
 try:
