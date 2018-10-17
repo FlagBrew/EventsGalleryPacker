@@ -56,8 +56,8 @@ for gen in range (4, 7+1):
 					entry['species'] = -1 if tempdata[0x51] != 0 else struct.unpack('<H', tempdata[0x82:0x84])[0]
 					entry['form'] = -1 if tempdata[0x51] != 0 else tempdata[0x84]
 				elif type == 'wc7full' or type == 'wc6full':
-					entry['species'] = -1 if tempdata[0x51 + 0x208] != 0 else struct.unpack('<H', tempdata[0x82:0x84])[0]
-					entry['form'] = -1 if tempdata[0x51 + 0x208] != 0 else tempdata[0x84]
+					entry['species'] = -1 if tempdata[0x51 + 0x208] != 0 else struct.unpack('<H', tempdata[0x28A:0x28C])[0]
+					entry['form'] = -1 if tempdata[0x51 + 0x208] != 0 else tempdata[0x28C]
 				elif type == 'pgf':
 					entry['species'] = -1 if tempdata[0xB3] != 1 else struct.unpack('<H', tempdata[0x1A:0x1C])[0]
 					entry['form'] = -1 if tempdata[0xB3] != 1 else tempdata[0x1C]
