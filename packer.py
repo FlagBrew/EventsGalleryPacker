@@ -42,11 +42,22 @@ for gen in range (4, 7+1):
 			name = fullname[:fullname.rindex(".")]
 			type = fullname[fullname.rindex(".")+1:]
 			size = os.stat(os.path.join(path, fullname)).st_size
+			game = name[name.index(" ")+1:name[name.index(" ")+1:].index(" ") + name.index(" ")+1]
+
+			name = name[0:4] + name[4:].replace("-","")
+			name = name.replace(" &", ",")
+			# get rid of language
+			name = name.replace("(" + path[path.rindex(os.sep)+1:] + ")", "")
+			# get rid of game (already saved into the 'game' field in the JSON)
+			name = name.replace(game, "")
+			# sanitize spaces
+			name = ' '.join(name.split())
 			
 			entry = {}
 			entry['name'] = name
 			entry['type'] = type
 			entry['size'] = size
+			entry['game'] = game
 			entry['offset'] = len(data)
 			sheet['wondercards'].append(entry)
 			
@@ -73,6 +84,8 @@ for gen in range (4, 7+1):
 						entry['species'] = -1
 						entry['form'] = -1
 				
+				if entry['species'] == -1:
+					entry['name'] = name.replace("Item ", "")
 				data += tempdata
 		
 	# export sheet	
