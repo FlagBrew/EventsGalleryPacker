@@ -7,6 +7,9 @@ import struct
 def getWC4(data):
 	return bytearray(data[0x8:0x8 + 136])
 
+def sortByName(thing):
+	return thing['name']
+
 # create out directory
 try:
     os.stat("./out")
@@ -89,6 +92,7 @@ for gen in range (4, 7+1):
 				data += tempdata
 		
 	# export sheet	
+	sheet['wondercards'] = sorted(sheet['wondercards'], key=sortByName)
 	sheet_data = json.dumps(sheet)
 	with open("./out/sheet{}.json".format(gen), 'w') as f:
 		f.write(sheet_data)
