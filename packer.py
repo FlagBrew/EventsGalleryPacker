@@ -47,17 +47,9 @@ for gen in range (4, 7+1):
 			size = os.stat(os.path.join(path, fullname)).st_size
 			game = name[name.index(" ")+1:name[name.index(" ")+1:].index(" ") + name.index(" ")+1]
 
-			name = name[0:4] + name[4:].replace("-","")
-			name = name.replace(" &", ",")
-			# get rid of language
-			name = name.replace("(" + path[path.rindex(os.sep)+1:] + ")", "")
-			# get rid of game (already saved into the 'game' field in the JSON)
-			name = name.replace(game, "")
-			# sanitize spaces
-			name = ' '.join(name.split())
-			
 			entry = {}
-			entry['name'] = name
+			if gen == 4:
+				entry['name'] = name
 			entry['type'] = type
 			entry['size'] = size
 			entry['game'] = game
@@ -69,12 +61,39 @@ for gen in range (4, 7+1):
 				if type == 'wc7' or type == 'wc6':
 					entry['species'] = -1 if tempdata[0x51] != 0 else struct.unpack('<H', tempdata[0x82:0x84])[0]
 					entry['form'] = -1 if tempdata[0x51] != 0 else tempdata[0x84]
+					# get event title
+					name = tempdata[0x2:0x4C]
+					for i in range(0, len(name), 2):
+						if name[i] == 0x00:
+							if name[i+1] == 0x00:
+								name = name[:i]
+								break
+					name = name.decode('utf-16le')
+					entry['name'] = "%04i - " % struct.unpack('<H', tempdata[:0x2])[0] + name
 				elif type == 'wc7full' or type == 'wc6full':
 					entry['species'] = -1 if tempdata[0x51 + 0x208] != 0 else struct.unpack('<H', tempdata[0x28A:0x28C])[0]
 					entry['form'] = -1 if tempdata[0x51 + 0x208] != 0 else tempdata[0x28C]
+					# get event title
+					name = tempdata[0x20A:0x254]
+					for i in range(0, len(name), 2):
+						if name[i] == 0x00:
+							if name[i+1] == 0x00:
+								name = name[:i]
+								break
+					name = name.decode('utf-16le')
+					entry['name'] = "%04i - " % struct.unpack('<H', tempdata[0x208:0x20A])[0] + name
 				elif type == 'pgf':
 					entry['species'] = -1 if tempdata[0xB3] != 1 else struct.unpack('<H', tempdata[0x1A:0x1C])[0]
 					entry['form'] = -1 if tempdata[0xB3] != 1 else tempdata[0x1C]
+					# get event title
+					name = tempdata[0x60:0xAA]
+					for i in range(0, len(name), 2):
+						if name[i] == 0xFF:
+							if name[i+1] == 0xFF:
+								name = name[:i]
+								break
+					name = name.decode('utf-16le')
+					entry['name'] = "%04i - " % struct.unpack('<H', tempdata[0xB0:0xB2])[0] + name
 				elif type == 'wc4':
 					if tempdata[0] == 1 or tempdata[0] == 2:
 						pk4 = getWC4(tempdata)
@@ -86,9 +105,7 @@ for gen in range (4, 7+1):
 					else:
 						entry['species'] = -1
 						entry['form'] = -1
-				
-				if entry['species'] == -1:
-					entry['name'] = name.replace("Item ", "")
+
 				data += tempdata
 		
 	# export sheet	
