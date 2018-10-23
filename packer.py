@@ -68,7 +68,10 @@ for gen in range (4, 7+1):
 							if name[i+1] == 0x00:
 								name = name[:i]
 								break
-					name = name.decode('utf-16le')
+					if len(name) == 0:
+						name = fullname[:fullname.rindex(".")].replace("Pokemon Link ","")
+					else:
+						name = name.decode('utf-16le')
 					entry['name'] = "%04i - " % struct.unpack('<H', tempdata[:0x2])[0] + name
 				elif type == 'wc7full' or type == 'wc6full':
 					entry['species'] = -1 if tempdata[0x51 + 0x208] != 0 else struct.unpack('<H', tempdata[0x28A:0x28C])[0]
