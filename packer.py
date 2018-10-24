@@ -56,7 +56,7 @@ for gen in range (4, 7+1):
 
 			entry = {}
 			if gen == 4:
-				entry['name'] = name.replace("Item ", "").replace(" " + game, "")
+				entry['name'] = name.replace("Item ", "").replace(" " + game, "").replace(" (" + lang + ")")
 			entry['type'] = type
 			entry['size'] = size
 			entry['game'] = game
