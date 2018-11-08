@@ -3,6 +3,7 @@ import git
 import os
 import json
 import struct
+import gen4string
 
 def getWC4(data):
 	return bytearray(data[0x8:0x8 + 136])
@@ -10,37 +11,8 @@ def getWC4(data):
 def sortById(thing):
 	return thing['id']
 
-# create out directory
-try:
-    os.stat("./out")
-except:
-    os.mkdir("./out")
-
-# import a/o update the EventsGallery
-if os.path.exists("./EventsGallery"):
-	print("Pulling from EventsGallery...")
-	repo = git.Repo("./EventsGallery")
-	repo.remotes.origin.pull()
-else:
-	print("Cloning EventsGallery...")
-	git.Git(".").clone("https://github.com/projectpokemon/EventsGallery.git")
-
-# loop generations
-print("Creating data...")
-for gen in range (4, 7+1):
-	# set root path
-	root = "./EventsGallery/Released/Gen {}/Wondercards".format(gen)
-
-	# initialize sheet
-	sheet = {}
-	sheet['gen'] = gen
-	sheet['wondercards'] = []
-	sheet['matches'] = []
-
-	# initialize data
-	data = b''
-
-	# parse files
+def scanDir(root, sheet, origOffset):
+	retdata = b''
 	for path, subdirs, files in os.walk(root):
 		for fullname in files:
 			name = fullname[:fullname.rindex(".")]
@@ -62,12 +34,16 @@ for gen in range (4, 7+1):
 					lang = "ENG"
 
 			entry = {}
-			if gen == 4:
-				entry['name'] = name.replace("Item ", "").replace(" " + game, "").replace(" (" + lang + ")","")
+			if type == 'pgt':
+				if path[path.rindex("/")+1:] == "Pokemon Ranger Manaphy Egg":
+					game = "DPPtHGSS"
+					entry['name'] = "Pokemon Ranger Manaphy Egg"
+				else:
+					entry['name'] = name.replace("Item ", "").replace(" " + game, "").replace(" (" + lang + ")","")
 			entry['type'] = type
 			entry['size'] = size
 			entry['game'] = game
-			entry['offset'] = len(data)
+			entry['offset'] = origOffset + len(retdata)
 			sheet['wondercards'].append(entry)
 			
 			with open(os.path.join(path, fullname), 'rb') as f:
@@ -165,7 +141,10 @@ for gen in range (4, 7+1):
 					else:
 						entry['species'] = -1
 						entry['form'] = -1
-					cardId = entry['name'][:3]
+					cardId = struct.unpack('<H', tempdata[0x150:0x152])[0]
+					entry['name'] = "%03i - " % cardId + gen4string.translateG4String(tempdata[0x104:0x104+0x48]).replace("Mystery Gift ","")
+					if entry['name'] == "%03i - " % cardId:
+						entry['name'] = name.replace("Item ", "").replace(" " + game, "").replace(" (" + lang + ")","")
 					inMatches = False
 					for i in range(len(sheet['matches'])):
 						if sheet['matches'][i]['id'] == cardId and sheet['matches'][i]['species'] == entry['species'] and sheet['matches'][i]['form'] == entry['form']:
@@ -179,7 +158,71 @@ for gen in range (4, 7+1):
 						match['indices'] = {}
 						match['indices'][lang] = len(sheet['wondercards']) - 1
 						sheet['matches'].append(match)
-				data += tempdata
+				elif type == 'pgt':
+					if tempdata[0] == 1 or tempdata[0] == 2:
+						pk4 = getWC4(tempdata)
+						entry['species'] = struct.unpack('<H', pk4[0x8:0x0A])[0]
+						entry['form'] = pk4[0x40] >> 3
+					elif tempdata[0] == 7:
+						entry['species'] = 490
+						entry['form'] = -1 # special meaning for Manaphy: egg
+					else:
+						entry['species'] = -1
+						entry['form'] = -1
+					cardId = entry['name'][:3]
+					if not any(elem in "1234567890" for elem in cardId):
+						cardId = 999
+					inMatches = False
+					for i in range(len(sheet['matches'])):
+						if sheet['matches'][i]['id'] == cardId and sheet['matches'][i]['species'] == entry['species'] and sheet['matches'][i]['form'] == entry['form']:
+							sheet['matches'][i]['indices'][lang] = len(sheet['wondercards']) - 1
+							inMatches = True
+					if not inMatches:
+						match = {}
+						match['id'] = cardId
+						match['species'] = entry['species']
+						match['form'] = entry['form']
+						match['indices'] = {}
+						match['indices'][lang] = len(sheet['wondercards']) - 1
+						sheet['matches'].append(match)
+
+				retdata += tempdata
+	return retdata
+
+# create out directory
+try:
+    os.stat("./out")
+except:
+    os.mkdir("./out")
+
+# import a/o update the EventsGallery
+if os.path.exists("./EventsGallery"):
+	print("Pulling from EventsGallery...")
+	repo = git.Repo("./EventsGallery")
+	repo.remotes.origin.pull()
+else:
+	print("Cloning EventsGallery...")
+	git.Git(".").clone("https://github.com/projectpokemon/EventsGallery.git")
+
+# loop generations
+print("Creating data...")
+for gen in range (4, 7+1):
+	# set root path
+	root = "./EventsGallery/Released/Gen {}/Wondercards".format(gen)
+
+	# initialize sheet
+	sheet = {}
+	sheet['gen'] = gen
+	sheet['wondercards'] = []
+	sheet['matches'] = []
+
+	# initialize data
+	data = b''
+
+	# parse files
+	data += scanDir(root, sheet, 0)
+	if (gen == 4):
+		data += scanDir("./EventsGallery/Released/Gen 4/Pokemon Ranger Manaphy Egg", sheet, len(data))
 	
 	# sort, then get rid of data not needed in final product
 	sheet['matches'] = sorted(sheet['matches'], key=sortById)
