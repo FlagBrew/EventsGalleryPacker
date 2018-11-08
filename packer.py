@@ -53,6 +53,13 @@ for gen in range (4, 7+1):
 				# in a subdirectory (there are currently only single subdirectories)
 				lang = path[:path.rindex("/")]
 				lang = lang[lang.rindex("/")+1:]
+			
+			if len(lang) != 3:
+				# Pokemon Link card; see Gen 6 folder structure
+				if "(" in name:
+					lang = name[name.index("(")+1:name.index("(")+1 + 3]
+				else:
+					lang = "ENG"
 
 			entry = {}
 			if gen == 4:
@@ -77,7 +84,10 @@ for gen in range (4, 7+1):
 								name = name[:i]
 								break
 					if len(name) == 0:
-						name = fullname[:fullname.rindex(".")].replace("Pokemon Link ","")
+						if "(" in fullname:
+							name = fullname[:fullname.index("(")].replace("Pokemon Link ","")
+						else:
+							name = fullname[:fullname.rindex(".")].replace("Pokemon Link ","")
 					else:
 						name = name.decode('utf-16le')
 					entry['name'] = "%04i - " % cardId + name
@@ -176,6 +186,7 @@ for gen in range (4, 7+1):
 	for i in range(len(sheet['matches'])):
 		temp = sheet['matches'][i]['indices']
 		sheet['matches'][i] = temp
+		sheet['matches'][i]
 		
 	# export sheet
 	sheet_data = json.dumps(sheet)
