@@ -212,7 +212,7 @@ for gen in range (4, 7+1):
 
 	# initialize sheet
 	sheet = {}
-	sheet['gen'] = gen
+	sheet['gen'] = str(gen)
 	sheet['wondercards'] = []
 	sheet['matches'] = []
 
