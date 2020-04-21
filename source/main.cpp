@@ -13,6 +13,7 @@
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <stdio.h>
+#include <string>
 #include <vector>
 
 static const std::string langs[]      = {"CHS", "CHT", "ENG", "FRE", "GER", "ITA", "JPN", "KOR", "SPA"};
@@ -113,9 +114,9 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
 
             if (wc->pokemon())
             {
-                entry["species"] = wc->species();
-                entry["gender"]  = wc->gender();
-                if (wc->species() == 490 && wc->egg())
+                entry["species"] = int(wc->species());
+                entry["gender"]  = int(wc->gender());
+                if (wc->species() == Species::Manaphy && wc->egg())
                 {
                     entry["form"] = -1;
                 }
