@@ -39,9 +39,6 @@ LDFLAGS	:=	-g -static -Wl,--gc-sections -lbz2
 ifeq ($(OS),Windows_NT)
 EXEC_NAME	:=	gallerypack.exe
 else
-ifeq ($(OS),Darwin)
-CXXFLAGS	+=	-stdlib=libc++
-endif
 LDFLAGS	+=	-lstdc++fs
 endif
 

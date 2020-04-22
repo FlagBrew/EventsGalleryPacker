@@ -18,8 +18,8 @@ jobs:
             cxx: g++-9
             osstring: Linux
           - os: macOS-latest
-            cc: clang
-            cxx: clang++
+            cc: gcc-9
+            cxx: g++-9
             osstring: Darwin
 
     steps:
