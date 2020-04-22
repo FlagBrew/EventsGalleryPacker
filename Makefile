@@ -1,4 +1,5 @@
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+.SECONDEXPANSION:
 
 CC	:=	gcc
 CXX	:=	g++
@@ -23,7 +24,7 @@ CPPFILES	:=	$(patsubst ./%,%,$(foreach dir,$(SOURCES),$(call rwildcard,$(dir),*.
 EXEC_NAME	:=	gallerypack
 BUILD		:=	build
 
-CFLAGS		:=	-Og -g -ffunction-sections $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) $(foreach dir, $(NOFORMAT_INCLUDES), -I$(CURDIR)/$(dir))
+CFLAGS		:=	-Og -g -ffunction-sections -fdata-sections $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) $(foreach dir, $(NOFORMAT_INCLUDES), -I$(CURDIR)/$(dir))
 CXXFLAGS	:=	$(CFLAGS) -std=gnu++17
 
 OFILES			:=	$(CFILES:.c=.c.o) $(CPPFILES:.cpp=.cpp.o)
@@ -52,18 +53,12 @@ clean:
 $(EXEC_NAME): $(BUILD_OFILES)
 	$(LD) $(BUILD_OFILES) $(LDFLAGS) -o $@
 
-$(BUILD)/%.c.o:
-	$(eval CURRENT_PREREQ:=$(patsubst $(BUILD)/%,%,$(subst __PrEvDiR,..,$(@:.c.o=.c))))
-	$(if $(wildcard $(CURRENT_PREREQ)),,$(error Prerequisite of $@ ($(CURRENT_PREREQ)) does not exist))
+$(BUILD)/%.c.o: $$(subst __PrEvDiR,..,$$*.c)
 	@mkdir -p $(dir $@)
-	$(CC) -MMD -MP -MF $(@:.o=.d) $(CFLAGS) -c -o $@ $(CURRENT_PREREQ)
-	$(eval undefine CURRENT_PREREQ)
+	$(CC) -MMD -MP -MF $(@:.o=.d) $(CFLAGS) -c -o $@ $<
 
-$(BUILD)/%.cpp.o:
-	$(eval CURRENT_PREREQ:=$(patsubst $(BUILD)/%,%,$(subst __PrEvDiR,..,$(@:.cpp.o=.cpp))))
-	$(if $(wildcard $(CURRENT_PREREQ)),,$(error Prerequisite of $@ ($(CURRENT_PREREQ)) does not exist))
+$(BUILD)/%.cpp.o: $$(subst __PrEvDiR,..,$$*.cpp)
 	@mkdir -p $(dir $@)
-	$(CXX) -MMD -MP -MF $(@:.o=.d) $(CXXFLAGS) -c -o $@ $(CURRENT_PREREQ)
-	$(eval undefine CURRENT_PREREQ)
+	$(CXX) -MMD -MP -MF $(@:.o=.d) $(CXXFLAGS) -c -o $@ $<
 
 include $(wildcard $(DEPSFILES))

@@ -20,8 +20,8 @@ jobs:
             cc: clang
             cxx: clang++
           - os: windows-latest
-            cc: msvc
-            cxx: msvc
+            cc: gcc
+            cxx: g++
 
     steps:
     - uses: actions/checkout@v2
