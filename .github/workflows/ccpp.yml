@@ -12,13 +12,23 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
+        include:
+          - os: ubuntu-latest
+            cc: gcc-9
+            cxx: g++-9
+          - os: macOS-latest
+            cc: clang
+            cxx: clang++
+          - os: windows-latest
+            cc: msvc
+            cxx: msvc
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
     - name: make
-      run: make CC=gcc-9 CXX=g++-9
+      run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
       uses: actions/upload-artifact@v1
       with:
