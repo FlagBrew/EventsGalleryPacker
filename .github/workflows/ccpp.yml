@@ -1,0 +1,25 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: make
+      run: make
+    
+    - uses: actions/upload-artifact@v1
+    - name: Upload generated artifact
+      with:
+        name: ${{ matrix.os }}
+        path: eventspacker
