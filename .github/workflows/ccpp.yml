@@ -16,9 +16,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        submodules: true
+        submodules: recursive
     - name: make
-      run: make
+      run: make CC=gcc-9 CXX=g++-9
     - name: Upload built file
       uses: actions/upload-artifact@v1
       with:
