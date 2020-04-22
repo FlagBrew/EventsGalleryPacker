@@ -29,7 +29,7 @@ jobs:
         submodules: recursive
     - name: Install libbz2-dev
       if: matrix.os == 'windows-latest'
-      run: mingw-get install libbz2-dev
+      run: mingw-get install mingw-bzip2-dev
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
