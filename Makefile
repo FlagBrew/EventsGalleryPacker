@@ -24,7 +24,7 @@ CPPFILES	:=	$(patsubst ./%,%,$(foreach dir,$(SOURCES),$(call rwildcard,$(dir),*.
 EXEC_NAME	:=	gallerypack
 BUILD		:=	build
 
-CFLAGS		:=	-Og -g -ffunction-sections -fdata-sections $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) $(foreach dir, $(NOFORMAT_INCLUDES), -I$(CURDIR)/$(dir))
+CFLAGS		:=	-O3 -ffunction-sections -fdata-sections $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) $(foreach dir, $(NOFORMAT_INCLUDES), -I$(CURDIR)/$(dir)) -flto
 CXXFLAGS	:=	$(CFLAGS) -std=gnu++17
 
 OFILES			:=	$(CFILES:.c=.c.o) $(CPPFILES:.cpp=.cpp.o)
@@ -34,7 +34,7 @@ BUILD_OFILES	:=	$(addprefix $(BUILD)/, $(BUILD_OFILES))
 DEPSFILES		:=	$(BUILD_OFILES:.o=.d)
 
 LD		:=	$(if $(CPPFILES),$(CXX),$(CC))
-LDFLAGS	:=	-g -lbz2
+LDFLAGS	:=	-lbz2 -flto
 
 ifeq ($(OS),Windows_NT)
 EXEC_NAME	:=	gallerypack.exe
