@@ -27,9 +27,9 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Install libbz2-dev
+    - name: Install libbz2
       if: matrix.os == 'windows-latest'
-      run: mingw-get install mingw-bzip2-dev
+      run: mingw-get install bzip2-1.0.6-4-mingw32-dev
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
