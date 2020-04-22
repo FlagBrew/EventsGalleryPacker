@@ -27,7 +27,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
         for (const auto& extension : extensions)
         {
             // +1 removes the period
-            if (extension == file.path().extension().c_str() + 1)
+            if (extension == file.path().extension().generic_string().c_str() + 1)
             {
                 goodExtension = true;
                 break;
@@ -36,10 +36,11 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
         if (file.is_regular_file() && goodExtension)
         {
             nlohmann::json entry = nlohmann::json::object();
-            std::string name     = file.path().stem();
+            std::string name     = file.path().stem().generic_string();
             std::string game     = name.substr(name.find(' ') + 1);
-            std::string type     = file.path().extension().c_str() + 1;
+            std::string type     = file.path().extension().generic_string().c_str() + 1;
             std::string lang;
+            auto fileSize = std::filesystem::file_size(file);
             for (const auto& l : langs)
             {
                 if (name.find("(" + l + ")") != std::string::npos)
@@ -52,7 +53,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 lang = "ENG";
             }
             entry["game"]   = game.substr(0, game.find(' '));
-            entry["size"]   = std::filesystem::file_size(file);
+            entry["size"]   = fileSize;
             entry["type"]   = type;
             entry["offset"] = outData.size();
             if (type == "pgt" && file.path().parent_path().filename() == "Pokemon Ranger Manaphy Egg")
@@ -73,17 +74,29 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 name.replace(name.find(" (" + lang + ")"), name.find(" (" + lang + ")") + lang.size() + 3, "");
             }
 
-            FILE* in    = fopen(file.path().c_str(), "rb");
-            u8* data    = new u8[std::filesystem::file_size(file)];
-            size_t read = fread(data, 1, std::filesystem::file_size(file), in);
+#ifdef _WIN32
+            FILE* in = _wfopen(file.path().generic_wstring().c_str(), L"rb");
+#else
+            FILE* in = fopen(file.path().generic_string().c_str(), "rb");
+#endif
+            if (!in)
+            {
+#ifdef _WIN32
+                wprintf(L"Could not open %s\n", file.path().generic_wstring().c_str());
+#else
+                printf("Could not open %s\n", file.path().generic_string().c_str());
+#endif
+            }
+            u8* data    = new u8[fileSize];
+            size_t read = fread(data, 1, fileSize, in);
             fclose(in);
             // Probably unnecessary, but let's do this to silence the warning
-            if (read != std::filesystem::file_size(file))
+            if (read != fileSize)
             {
-                printf("Bad");
+                printf("Bad: %lu read of %lu", read, fileSize);
                 continue;
             }
-            outData.insert(outData.end(), data, data + std::filesystem::file_size(file));
+            outData.insert(outData.end(), data, data + fileSize);
             std::unique_ptr<WCX> wc;
             if (type == "wc7" || type == "wc7full")
             {
@@ -150,9 +163,9 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
             entry["id"]   = wc->ID();
             if (type != "pgt")
             {
-                name       = wc->title();
-                char id[9] = {'\0'};
-                sprintf(id, "%04i - ", wc->ID());
+                name        = wc->title();
+                char id[10] = {'\0'}; // One extra character for safety (u16 can only be up to 5 characters)
+                sprintf(id, "%04u - ", wc->ID());
                 name = id + name;
             }
 
@@ -231,8 +244,6 @@ int main(int argc, char** argv)
             scanDir(data, sheet, gallery / "Released" / "Gen 4" / "Pokemon Ranger Manaphy Egg");
         }
 
-        printf("%i\n", data.size());
-
         std::sort(sheet["matches"].begin(), sheet["matches"].end(),
             [](const nlohmann::json& j1, const nlohmann::json& j2) { return j1["id"].get<int>() < j2["id"].get<int>(); });
 
@@ -242,15 +253,16 @@ int main(int argc, char** argv)
             match = match["indices"];
         }
 
-        u8* compData = new u8[data.size()];
+        unsigned int compressedSize = (unsigned int)(1.11 * data.size() + 600);
+        u8* compData                = new u8[compressedSize];
         u8 hash[SHA256_BLOCK_SIZE];
-        unsigned int compressedSize;
 
         int error = BZ2_bzBuffToBuffCompress((char*)compData, &compressedSize, (char*)data.data(), data.size(), 5, 0, 0);
 
         std::string outPath = "out/data" + std::to_string(gen) + ".bin.bz2";
         FILE* outFile       = fopen(outPath.c_str(), "wb");
-        fwrite(compData, 1, compressedSize, outFile);
+        auto written        = fwrite(compData, 1, compressedSize, outFile);
+        printf("Written: %lu of %u (with original size %lu)\n", written, compressedSize, data.size());
         fclose(outFile);
 
         sha256(hash, compData, compressedSize);
@@ -262,7 +274,8 @@ int main(int argc, char** argv)
 
         delete[] compData;
         std::string jsonData = sheet.dump(2);
-        compData             = new u8[jsonData.size()];
+        compressedSize       = (unsigned int)(1.11 * jsonData.size() + 600);
+        compData             = new u8[compressedSize];
 
         BZ2_bzBuffToBuffCompress((char*)compData, &compressedSize, (char*)jsonData.data(), jsonData.size(), 5, 0, 0);
 

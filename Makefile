@@ -34,12 +34,12 @@ BUILD_OFILES	:=	$(addprefix $(BUILD)/, $(BUILD_OFILES))
 DEPSFILES		:=	$(BUILD_OFILES:.o=.d)
 
 LD		:=	$(if $(CPPFILES),$(CXX),$(CC))
-LDFLAGS	:=	-g -static -Wl,--gc-sections -lstdc++fs -lbz2
+LDFLAGS	:=	-g -static -Wl,--gc-sections -lbz2
 
-ifeq ($(OS),Windows_NT)
-WHICH = where
+ifneq ($(OS),Windows_NT)
+LDFLAGS	+=	-lstdc++fs
 else
-WHICH = which
+EXEC_NAME	:=	gallerypack.exe
 endif
 
 .PHONY: all clean

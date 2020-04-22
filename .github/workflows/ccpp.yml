@@ -16,24 +16,27 @@ jobs:
           - os: ubuntu-latest
             cc: gcc-9
             cxx: g++-9
+            exec: gallerypack
           - os: macOS-latest
             cc: clang
             cxx: clang++
+            exec: gallerypack
           - os: windows-latest
             cc: gcc
             cxx: g++
+            exec: gallerypack.exe
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Install libbz2
+    - name: Install libbz2-dev
       if: matrix.os == 'windows-latest'
-      run: mingw-get install bzip2-1.0.6-4-mingw32-dev
+      run: mingw-get install mingw-bzip2
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.os }}
-        path: eventspacker
+        path: ${{ matrix.exec }}
