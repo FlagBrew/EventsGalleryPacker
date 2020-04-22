@@ -11,34 +11,23 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest]
         include:
           - os: ubuntu-latest
             cc: gcc-9
             cxx: g++-9
-            exec: gallerypack
           - os: macOS-latest
             cc: clang
             cxx: clang++
-            exec: gallerypack
-          - os: windows-latest
-            cc: gcc
-            cxx: g++
-            exec: gallerypack.exe
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Install libbz2-dev
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install mingw-get
-        mingw-get install mingw32-bzip2
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.os }}
-        path: ${{ matrix.exec }}
+        path: gallerypack
