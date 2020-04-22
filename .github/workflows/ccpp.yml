@@ -15,7 +15,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: textbook/git-checkout-submodule-action@master
+      with:
+        submodules: true
     - name: make
       run: make
     - name: Upload built file
