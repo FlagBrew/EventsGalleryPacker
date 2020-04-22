@@ -16,9 +16,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: make
-      run: make
-    
-    - name: Upload generated artifact
+      run: make > build.log
+    - name: Upload build log
+      uses: actions/upload-artifact@v1
+      with:
+        name: output.log
+        path: build.log
+    - name: Upload built file
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.os }}
