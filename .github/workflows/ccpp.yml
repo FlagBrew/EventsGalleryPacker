@@ -19,6 +19,8 @@ jobs:
           - os: macOS-latest
             cc: clang
             cxx: clang++
+            env:
+              OS: Darwin
 
     steps:
     - uses: actions/checkout@v2
