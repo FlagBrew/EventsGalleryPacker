@@ -17,8 +17,8 @@ jobs:
             cc: gcc-9
             cxx: g++-9
           - os: macOS-latest
-            cc: gcc
-            cxx: g++
+            cc: clang
+            cxx: clang++
 
     steps:
     - uses: actions/checkout@v2

@@ -36,10 +36,13 @@ DEPSFILES		:=	$(BUILD_OFILES:.o=.d)
 LD		:=	$(if $(CPPFILES),$(CXX),$(CC))
 LDFLAGS	:=	-g -static -Wl,--gc-sections -lbz2
 
-ifneq ($(OS),Windows_NT)
-LDFLAGS	+=	-lstdc++fs
-else
+ifeq ($(OS),Windows_NT)
 EXEC_NAME	:=	gallerypack.exe
+else
+ifeq ($(OS),Darwin)
+CXXFLAGS	+=	-stdlib=libc++
+endif
+LDFLAGS	+=	-lstdc++fs
 endif
 
 .PHONY: all clean
