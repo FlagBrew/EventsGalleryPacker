@@ -32,7 +32,7 @@ jobs:
         submodules: recursive
     - name: Install libbz2-dev
       if: matrix.os == 'windows-latest'
-      run: mingw-get install mingw-bzip2
+      run: mingw-get install mingw32-bzip2
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
