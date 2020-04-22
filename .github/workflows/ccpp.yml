@@ -28,10 +28,10 @@ jobs:
         submodules: recursive
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
-    - name: Upload built file
-      uses: actions/upload-artifact@v1
       env:
         OS: ${{ matrix.osstring }}
+    - name: Upload built file
+      uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.os }}
         path: gallerypack
