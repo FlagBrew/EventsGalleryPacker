@@ -33,9 +33,9 @@ jobs:
     - name: Install libbz2-dev
       if: matrix.os == 'windows-latest'
       run: |
-        mingw-get update;
+        where g++
+        mingw-get update
         mingw-get install mingw32-bzip2
-      shell: mingw
     - name: make
       run: make CC=${{ matrix.cc }} CXX=${{ matrix.cxx }}
     - name: Upload built file
