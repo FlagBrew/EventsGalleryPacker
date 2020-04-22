@@ -21,24 +21,24 @@ static const std::string extensions[] = {"wc7", "wc6", "wc7full", "wc6full", "pg
 
 void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem::path root)
 {
-    for (std::filesystem::recursive_directory_iterator it{root}; it != std::filesystem::recursive_directory_iterator{}; it++)
+    for (auto& file : std::filesystem::recursive_directory_iterator{root})
     {
         bool goodExtension = false;
         for (const auto& extension : extensions)
         {
             // +1 removes the period
-            if (extension == it->path().extension().c_str() + 1)
+            if (extension == file.path().extension().c_str() + 1)
             {
                 goodExtension = true;
                 break;
             }
         }
-        if (it->is_regular_file() && goodExtension)
+        if (file.is_regular_file() && goodExtension)
         {
             nlohmann::json entry = nlohmann::json::object();
-            std::string name     = it->path().stem();
+            std::string name     = file.path().stem();
             std::string game     = name.substr(name.find(' ') + 1);
-            std::string type     = it->path().extension().c_str() + 1;
+            std::string type     = file.path().extension().c_str() + 1;
             std::string lang;
             for (const auto& l : langs)
             {
@@ -52,10 +52,10 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 lang = "ENG";
             }
             entry["game"]   = game.substr(0, game.find(' '));
-            entry["size"]   = std::filesystem::file_size(*it);
+            entry["size"]   = std::filesystem::file_size(file);
             entry["type"]   = type;
             entry["offset"] = outData.size();
-            if (type == "pgt" && it->path().parent_path().filename() == "Pokemon Ranger Manaphy Egg")
+            if (type == "pgt" && file.path().parent_path().filename() == "Pokemon Ranger Manaphy Egg")
             {
                 name = "Pokemon Ranger Manaphy Egg";
                 game = "DPPtHGSS";
@@ -73,17 +73,17 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 name.replace(name.find(" (" + lang + ")"), name.find(" (" + lang + ")") + lang.size() + 3, "");
             }
 
-            FILE* in    = fopen(it->path().c_str(), "rb");
-            u8* data    = new u8[std::filesystem::file_size(*it)];
-            size_t read = fread(data, 1, std::filesystem::file_size(*it), in);
+            FILE* in    = fopen(file.path().c_str(), "rb");
+            u8* data    = new u8[std::filesystem::file_size(file)];
+            size_t read = fread(data, 1, std::filesystem::file_size(file), in);
             fclose(in);
             // Probably unnecessary, but let's do this to silence the warning
-            if (read != std::filesystem::file_size(*it))
+            if (read != std::filesystem::file_size(file))
             {
                 printf("Bad");
                 continue;
             }
-            outData.insert(outData.end(), data, data + std::filesystem::file_size(*it));
+            outData.insert(outData.end(), data, data + std::filesystem::file_size(file));
             std::unique_ptr<WCX> wc;
             if (type == "wc7" || type == "wc7full")
             {
