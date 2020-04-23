@@ -34,7 +34,7 @@ BUILD_OFILES	:=	$(addprefix $(BUILD)/, $(BUILD_OFILES))
 DEPSFILES		:=	$(BUILD_OFILES:.o=.d)
 
 LD		:=	$(if $(CPPFILES),$(CXX),$(CC))
-LDFLAGS	:=	-Wl,-Bstatic -lbz2 -Wl,-Bdynamic -flto
+LDFLAGS	:=	-flto
 
 ifeq ($(OS),Windows_NT)
 EXEC_NAME	:=	gallerypack.exe
@@ -43,7 +43,7 @@ LDFLAGS	+=	-lstdc++fs
 endif
 
 ifneq ($(OS),Darwin)
-LDFLAGS	+=	-Wl,--gc-sections
+LDFLAGS	+=	-Wl,--gc-sections -Wl,-Bstatic -lbz2 -Wl,-Bdynamic 
 endif
 
 .PHONY: all clean

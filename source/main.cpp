@@ -262,7 +262,6 @@ int main(int argc, char** argv)
         std::string outPath = "out/data" + std::to_string(gen) + ".bin.bz2";
         FILE* outFile       = fopen(outPath.c_str(), "wb");
         auto written        = fwrite(compData, 1, compressedSize, outFile);
-        printf("Written: %lu of %u (with original size %lu)\n", written, compressedSize, data.size());
         fclose(outFile);
 
         sha256(hash, compData, compressedSize);
