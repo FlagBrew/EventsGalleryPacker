@@ -44,6 +44,8 @@ endif
 
 ifneq ($(OS),Darwin)
 LDFLAGS	+=	-Wl,--gc-sections -Wl,-Bstatic -lbz2 -Wl,-Bdynamic 
+else
+LDFLAGS	+=	-lbz2
 endif
 
 .PHONY: all clean
