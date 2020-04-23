@@ -13,7 +13,7 @@ jobs:
       matrix:
         os: [ubuntu-16.04, macOS-latest]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-16.04
             cc: gcc-9
             cxx: g++-9
             osstring: Linux
