@@ -19,7 +19,7 @@
 static const std::string langs[]      = {"CHS", "CHT", "ENG", "FRE", "GER", "ITA", "JPN", "KOR", "SPA"};
 static const std::string extensions[] = {"wc7", "wc6", "wc7full", "wc6full", "pgf", "wc4", "pgt", "pcd"};
 
-void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem::path root)
+void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::filesystem::path& root, bool released)
 {
     for (auto& file : std::filesystem::recursive_directory_iterator{root})
     {
@@ -47,10 +47,6 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 {
                     lang = l;
                 }
-            }
-            if (lang.empty())
-            {
-                lang = "ENG";
             }
             entry["game"]   = game.substr(0, game.find(' '));
             entry["size"]   = fileSize;
@@ -96,7 +92,6 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 printf("Bad: %lu read of %lu", read, fileSize);
                 continue;
             }
-            outData.insert(outData.end(), data, data + fileSize);
             std::unique_ptr<WCX> wc;
             if (type == "wc7" || type == "wc7full")
             {
@@ -122,6 +117,51 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
             {
                 wc = std::make_unique<WC4>((u8*)data);
             }
+
+            if (lang.empty())
+            {
+                switch (wc->language())
+                {
+                    case Language::CHS:
+                        lang = "CHS";
+                        break;
+                    case Language::CHT:
+                        lang = "CHT";
+                        break;
+                    case Language::ENG:
+                        lang = "ENG";
+                        break;
+                    case Language::FRE:
+                        lang = "FRE";
+                        break;
+                    case Language::GER:
+                        lang = "GER";
+                        break;
+                    case Language::ITA:
+                        lang = "ITA";
+                        break;
+                    case Language::JPN:
+                        lang = "JPN";
+                        break;
+                    case Language::KOR:
+                        lang = "KOR";
+                        break;
+                    case Language::SPA:
+                        lang = "SPA";
+                        break;
+                    default:
+                        lang = "ENG";
+                        break;
+                }
+            }
+
+            // There's a dumb WC6 that requires this special case. Whee
+            if (wc->pokemon() && wc->species() == Species::None)
+            {
+                continue;
+            }
+
+            outData.insert(outData.end(), data, data + fileSize);
 
             delete[] data;
 
@@ -169,7 +209,8 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, std::filesystem
                 name = id + name;
             }
 
-            entry["name"] = name;
+            entry["name"]     = name;
+            entry["released"] = released;
 
             outSheet["wondercards"].emplace_back(entry);
 
@@ -238,10 +279,16 @@ int main(int argc, char** argv)
         sheet["matches"]     = nlohmann::json::array();
 
         std::vector<u8> data;
-        scanDir(data, sheet, dir);
+        scanDir(data, sheet, dir, true);
         if (gen == 4)
         {
-            scanDir(data, sheet, gallery / "Released" / "Gen 4" / "Pokemon Ranger Manaphy Egg");
+            scanDir(data, sheet, gallery / "Released" / "Gen 4" / "Pokemon Ranger Manaphy Egg", true);
+        }
+
+        dir = gallery / "Unreleased" / ("Gen " + std::to_string(gen));
+        if (std::filesystem::exists(dir))
+        {
+            scanDir(data, sheet, dir, false);
         }
 
         std::sort(sheet["matches"].begin(), sheet["matches"].end(),
