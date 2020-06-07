@@ -1,4 +1,4 @@
-#include "utils/sha256.h"
+#include "utils/crypto.hpp"
 #include "wcx/PCD.hpp"
 #include "wcx/PGF.hpp"
 #include "wcx/PGT.hpp"
@@ -92,61 +92,61 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
                 printf("Bad: %lu read of %lu", read, fileSize);
                 continue;
             }
-            std::unique_ptr<WCX> wc;
+            std::unique_ptr<pksm::WCX> wc;
             if (type == "wc7" || type == "wc7full")
             {
-                wc = std::make_unique<WC7>((u8*)data, type == "wc7full");
+                wc = std::make_unique<pksm::WC7>((u8*)data, type == "wc7full");
             }
             else if (type == "wc6" || type == "wc6full")
             {
-                wc = std::make_unique<WC6>((u8*)data, type == "wc6full");
+                wc = std::make_unique<pksm::WC6>((u8*)data, type == "wc6full");
             }
             else if (type == "pgf")
             {
-                wc = std::make_unique<PGF>((u8*)data);
+                wc = std::make_unique<pksm::PGF>((u8*)data);
             }
             else if (type == "pgt")
             {
-                wc = std::make_unique<PGT>((u8*)data);
+                wc = std::make_unique<pksm::PGT>((u8*)data);
             }
             else if (type == "pcd")
             {
-                wc = std::make_unique<PCD>((u8*)data);
+                wc = std::make_unique<pksm::PCD>((u8*)data);
             }
             else if (type == "wc4")
             {
-                wc = std::make_unique<WC4>((u8*)data);
+                wc = std::make_unique<pksm::WC4>((u8*)data);
             }
 
             if (lang.empty())
             {
                 switch (wc->language())
                 {
-                    case Language::CHS:
+                    case pksm::Language::CHS:
                         lang = "CHS";
                         break;
-                    case Language::CHT:
+                    case pksm::Language::CHT:
                         lang = "CHT";
                         break;
-                    case Language::ENG:
+                    case pksm::Language::ENG:
                         lang = "ENG";
                         break;
-                    case Language::FRE:
+                    case pksm::Language::FRE:
                         lang = "FRE";
                         break;
-                    case Language::GER:
+                    case pksm::Language::GER:
                         lang = "GER";
                         break;
-                    case Language::ITA:
+                    case pksm::Language::ITA:
                         lang = "ITA";
                         break;
-                    case Language::JPN:
+                    case pksm::Language::JPN:
                         lang = "JPN";
                         break;
-                    case Language::KOR:
+                    case pksm::Language::KOR:
                         lang = "KOR";
                         break;
-                    case Language::SPA:
+                    case pksm::Language::SPA:
                         lang = "SPA";
                         break;
                     default:
@@ -156,7 +156,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             }
 
             // There's a dumb WC6 that requires this special case. Whee
-            if (wc->pokemon() && wc->species() == Species::None)
+            if (wc->pokemon() && wc->species() == pksm::Species::None)
             {
                 continue;
             }
@@ -169,7 +169,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             {
                 entry["species"] = int(wc->species());
                 entry["gender"]  = int(wc->gender());
-                if (wc->species() == Species::Manaphy && wc->egg())
+                if (wc->species() == pksm::Species::Manaphy && wc->egg())
                 {
                     entry["form"] = -1;
                 }
@@ -189,7 +189,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             {
                 entry["species"] = -1;
                 entry["form"]    = -1;
-                entry["form"]    = -1;
+                entry["gender"]  = -1;
                 entry["moves"]   = nlohmann::json::array();
                 for (size_t i = 0; i < 4; i++)
                 {
@@ -302,7 +302,6 @@ int main(int argc, char** argv)
 
         unsigned int compressedSize = (unsigned int)(1.11 * data.size() + 600);
         u8* compData                = new u8[compressedSize];
-        u8 hash[SHA256_BLOCK_SIZE];
 
         int error = BZ2_bzBuffToBuffCompress((char*)compData, &compressedSize, (char*)data.data(), data.size(), 5, 0, 0);
 
@@ -311,11 +310,11 @@ int main(int argc, char** argv)
         auto written        = fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
 
-        sha256(hash, compData, compressedSize);
+        auto hash = pksm::crypto::sha256(compData, compressedSize);
 
         outPath += ".sha";
         outFile = fopen(outPath.c_str(), "wb");
-        fwrite(hash, 1, sizeof(hash), outFile);
+        fwrite(hash.data(), 1, hash.size(), outFile);
         fclose(outFile);
 
         delete[] compData;
@@ -330,11 +329,11 @@ int main(int argc, char** argv)
         fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
 
-        sha256(hash, compData, compressedSize);
+        hash = pksm::crypto::sha256(compData, compressedSize);
 
         outPath += ".sha";
         outFile = fopen(outPath.c_str(), "wb");
-        fwrite(hash, 1, sizeof(hash), outFile);
+        fwrite(hash.data(), 1, hash.size(), outFile);
         fclose(outFile);
     }
 
