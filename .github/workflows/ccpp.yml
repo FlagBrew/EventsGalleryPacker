@@ -13,11 +13,11 @@ jobs:
       matrix:
         os: [ubuntu-22.04, macOS-12]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             cc: gcc-11
             cxx: g++-11
             osstring: Linux
-          - os: macOS-latest
+          - os: macOS-12
             cc: gcc-11
             cxx: g++-11
             osstring: Darwin
