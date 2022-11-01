@@ -14,12 +14,12 @@ jobs:
         os: [ubuntu-latest, macOS-latest]
         include:
           - os: ubuntu-latest
-            cc: gcc-9
-            cxx: g++-9
+            cc: gcc-10
+            cxx: g++-10
             osstring: Linux
           - os: macOS-latest
-            cc: gcc-9
-            cxx: g++-9
+            cc: gcc-10
+            cxx: g++-10
             osstring: Darwin
 
     steps:

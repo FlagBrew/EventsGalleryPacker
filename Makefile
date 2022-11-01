@@ -25,7 +25,7 @@ EXEC_NAME	:=	gallerypack
 BUILD		:=	build
 
 CFLAGS		:=	-O3 -ffunction-sections -fdata-sections $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) $(foreach dir, $(NOFORMAT_INCLUDES), -I$(CURDIR)/$(dir)) -flto
-CXXFLAGS	:=	$(CFLAGS) -std=gnu++17
+CXXFLAGS	:=	$(CFLAGS) -std=gnu++20
 
 OFILES			:=	$(CFILES:.c=.c.o) $(CPPFILES:.cpp=.cpp.o)
 BUILD_OFILES	:=	$(subst //,/,$(subst /../,/__PrEvDiR/,$(subst /,//, $(OFILES))))

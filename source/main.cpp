@@ -16,10 +16,13 @@
 #include <string>
 #include <vector>
 
-static const std::string langs[]      = {"CHS", "CHT", "ENG", "FRE", "GER", "ITA", "JPN", "KOR", "SPA"};
-static const std::string extensions[] = {"wc7", "wc6", "wc7full", "wc6full", "pgf", "wc4", "pgt", "pcd"};
+static constexpr std::string_view langs[] = {
+    "CHS", "CHT", "ENG", "FRE", "GER", "ITA", "JPN", "KOR", "SPA"};
+static constexpr std::string_view extensions[] = {
+    "wc7", "wc6", "wc7full", "wc6full", "pgf", "wc4", "pgt", "pcd"};
 
-void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::filesystem::path& root, bool released)
+void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::filesystem::path& root,
+    bool released)
 {
     for (auto& file : std::filesystem::recursive_directory_iterator{root})
     {
@@ -43,7 +46,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             auto fileSize = std::filesystem::file_size(file);
             for (const auto& l : langs)
             {
-                if (name.find("(" + l + ")") != std::string::npos)
+                if (name.find("(" + std::string(l) + ")") != std::string::npos)
                 {
                     lang = l;
                 }
@@ -52,7 +55,8 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             entry["size"]   = fileSize;
             entry["type"]   = type;
             entry["offset"] = outData.size();
-            if (type == "pgt" && file.path().parent_path().filename() == "Pokemon Ranger Manaphy Egg")
+            if (type == "pgt" &&
+                file.path().parent_path().filename() == "Pokemon Ranger Manaphy Egg")
             {
                 name = "Pokemon Ranger Manaphy Egg";
                 game = "DPPtHGSS";
@@ -67,7 +71,8 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             }
             if (name.find(" (" + lang + ")") != std::string::npos)
             {
-                name.replace(name.find(" (" + lang + ")"), name.find(" (" + lang + ")") + lang.size() + 3, "");
+                name.replace(name.find(" (" + lang + ")"),
+                    name.find(" (" + lang + ")") + lang.size() + 3, "");
             }
 
 #ifdef _WIN32
@@ -180,7 +185,7 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
                 entry["moves"] = nlohmann::json::array();
                 for (size_t i = 0; i < 4; i++)
                 {
-                    entry["moves"].emplace_back(wc->move(i));
+                    entry["moves"].emplace_back((u32)wc->move(i));
                 }
                 entry["TID"] = wc->TID();
                 entry["SID"] = wc->SID();
@@ -204,7 +209,8 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             if (type != "pgt")
             {
                 name        = wc->title();
-                char id[10] = {'\0'}; // One extra character for safety (u16 can only be up to 5 characters)
+                char id[10] = {
+                    '\0'}; // One extra character for safety (u16 can only be up to 5 characters)
                 sprintf(id, "%04u - ", wc->ID());
                 name = id + name;
             }
@@ -217,9 +223,12 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
             bool inMatches = false;
             for (auto& match : outSheet["matches"])
             {
-                if (match["species"] == entry["species"] && match["form"] == entry["form"] && match["gender"] == entry["gender"] &&
-                    match["item"] == entry["item"] && match["id"] == entry["id"] && match["TID"] == entry["TID"] && match["SID"] == entry["SID"] &&
-                    match["moves"][0] == entry["moves"][0] && match["moves"][1] == entry["moves"][1] && match["moves"][2] == entry["moves"][2] &&
+                if (match["species"] == entry["species"] && match["form"] == entry["form"] &&
+                    match["gender"] == entry["gender"] && match["item"] == entry["item"] &&
+                    match["id"] == entry["id"] && match["TID"] == entry["TID"] &&
+                    match["SID"] == entry["SID"] && match["moves"][0] == entry["moves"][0] &&
+                    match["moves"][1] == entry["moves"][1] &&
+                    match["moves"][2] == entry["moves"][2] &&
                     match["moves"][3] == entry["moves"][3])
                 {
                     match["indices"][lang] = outSheet["wondercards"].size() - 1;
@@ -266,7 +275,12 @@ int main(int argc, char** argv)
 
     for (const int& gen : {4, 5, 6, 7})
     {
-        std::filesystem::path dir = gallery / "Released" / ("Gen " + std::to_string(gen)) / "Wondercards";
+        std::filesystem::path dir = gallery / "Released" / ("Gen " + std::to_string(gen));
+        if (gen == 7)
+        {
+            dir /= "3DS";
+        }
+        dir /= "Wondercards";
         if (!std::filesystem::exists(dir))
         {
             printf("\'%s\' does not exist\n", dir.c_str());
@@ -282,7 +296,8 @@ int main(int argc, char** argv)
         scanDir(data, sheet, dir, true);
         if (gen == 4)
         {
-            scanDir(data, sheet, gallery / "Released" / "Gen 4" / "Pokemon Ranger Manaphy Egg", true);
+            scanDir(
+                data, sheet, gallery / "Released" / "Gen 4" / "Pokemon Ranger Manaphy Egg", true);
         }
 
         dir = gallery / "Unreleased" / ("Gen " + std::to_string(gen));
@@ -292,7 +307,8 @@ int main(int argc, char** argv)
         }
 
         std::sort(sheet["matches"].begin(), sheet["matches"].end(),
-            [](const nlohmann::json& j1, const nlohmann::json& j2) { return j1["id"].get<int>() < j2["id"].get<int>(); });
+            [](const nlohmann::json& j1, const nlohmann::json& j2)
+            { return j1["id"].get<int>() < j2["id"].get<int>(); });
 
         // remove unnecessary data
         for (auto& match : sheet["matches"])
@@ -303,14 +319,15 @@ int main(int argc, char** argv)
         unsigned int compressedSize = (unsigned int)(1.11 * data.size() + 600);
         u8* compData                = new u8[compressedSize];
 
-        int error = BZ2_bzBuffToBuffCompress((char*)compData, &compressedSize, (char*)data.data(), data.size(), 5, 0, 0);
+        int error = BZ2_bzBuffToBuffCompress(
+            (char*)compData, &compressedSize, (char*)data.data(), data.size(), 5, 0, 0);
 
         std::string outPath = "out/data" + std::to_string(gen) + ".bin.bz2";
         FILE* outFile       = fopen(outPath.c_str(), "wb");
         auto written        = fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
 
-        auto hash = pksm::crypto::sha256(compData, compressedSize);
+        auto hash = pksm::crypto::sha256(std::span<u8>{compData, compressedSize});
 
         outPath += ".sha";
         outFile = fopen(outPath.c_str(), "wb");
@@ -322,14 +339,15 @@ int main(int argc, char** argv)
         compressedSize       = (unsigned int)(1.11 * jsonData.size() + 600);
         compData             = new u8[compressedSize];
 
-        BZ2_bzBuffToBuffCompress((char*)compData, &compressedSize, (char*)jsonData.data(), jsonData.size(), 5, 0, 0);
+        BZ2_bzBuffToBuffCompress(
+            (char*)compData, &compressedSize, (char*)jsonData.data(), jsonData.size(), 5, 0, 0);
 
         outPath = "out/sheet" + std::to_string(gen) + ".json.bz2";
         outFile = fopen(outPath.c_str(), "wb");
         fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
 
-        hash = pksm::crypto::sha256(compData, compressedSize);
+        hash = pksm::crypto::sha256(std::span<u8>{compData, compressedSize});
 
         outPath += ".sha";
         outFile = fopen(outPath.c_str(), "wb");
