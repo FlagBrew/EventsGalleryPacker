@@ -31,7 +31,7 @@ jobs:
       env:
         OS: ${{ matrix.osstring }}
     - name: Upload built file
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}
         path: gallerypack
