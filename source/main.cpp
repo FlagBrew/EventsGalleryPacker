@@ -231,8 +231,27 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
                     match["moves"][2] == entry["moves"][2] &&
                     match["moves"][3] == entry["moves"][3])
                 {
-                    match["indices"][lang] = outSheet["wondercards"].size() - 1;
-                    inMatches              = true;
+                    const size_t newIndex = outSheet["wondercards"].size() - 1;
+                    auto& indices         = match["indices"];
+                    // Don't let a card clobber an existing language slot unless it
+                    // upgrades an unreleased entry to a released one. This guards
+                    // against mislabeled files (e.g. a Japanese "Test" card named
+                    // "(ENG)") overwriting the real localized released card.
+                    if (!indices.contains(lang))
+                    {
+                        indices[lang] = newIndex;
+                    }
+                    else
+                    {
+                        const size_t existing = indices[lang].get<size_t>();
+                        const bool existingReleased =
+                            outSheet["wondercards"][existing]["released"].get<bool>();
+                        if (!existingReleased && released)
+                        {
+                            indices[lang] = newIndex;
+                        }
+                    }
+                    inMatches = true;
                     break;
                 }
             }
