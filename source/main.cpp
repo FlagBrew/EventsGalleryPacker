@@ -277,20 +277,38 @@ void scanDir(std::vector<u8>& outData, nlohmann::json& outSheet, const std::file
 
 int main(int argc, char** argv)
 {
-    if (argc != 2)
+    if (argc < 2 || argc > 3)
     {
-        printf("Usage: %s <EventsGallery directory>\n", argv[0]);
+        printf("Usage: %s <EventsGallery directory> [personal data directory]\n", argv[0]);
         return 1;
     }
 
-    std::filesystem::create_directory("out");
-
-    std::filesystem::path gallery(argv[1]);
+    // Resolve the gallery and output paths to absolute up front, since we may
+    // change the working directory below.
+    std::filesystem::path gallery = std::filesystem::absolute(argv[1]);
     if (!std::filesystem::exists(gallery))
     {
         printf("Gallery directory does not exist\n");
         return 2;
     }
+
+    const std::filesystem::path outDir = std::filesystem::current_path() / "out";
+
+    // The core library loads its personal (base stat) data files relative to the
+    // current working directory. Allow the caller to point at the folder holding
+    // them by switching into it; gallery/output paths stay absolute regardless.
+    if (argc == 3)
+    {
+        std::filesystem::path personal = std::filesystem::absolute(argv[2]);
+        if (!std::filesystem::exists(personal))
+        {
+            printf("Personal data directory does not exist\n");
+            return 2;
+        }
+        std::filesystem::current_path(personal);
+    }
+
+    std::filesystem::create_directory(outDir);
 
     for (const int& gen : {4, 5, 6, 7})
     {
@@ -341,7 +359,8 @@ int main(int argc, char** argv)
         int error = BZ2_bzBuffToBuffCompress(
             (char*)compData, &compressedSize, (char*)data.data(), data.size(), 5, 0, 0);
 
-        std::string outPath = "out/data" + std::to_string(gen) + ".bin.bz2";
+        std::string outPath =
+            (outDir / ("data" + std::to_string(gen) + ".bin.bz2")).string();
         FILE* outFile       = fopen(outPath.c_str(), "wb");
         auto written        = fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
@@ -361,7 +380,7 @@ int main(int argc, char** argv)
         BZ2_bzBuffToBuffCompress(
             (char*)compData, &compressedSize, (char*)jsonData.data(), jsonData.size(), 5, 0, 0);
 
-        outPath = "out/sheet" + std::to_string(gen) + ".json.bz2";
+        outPath = (outDir / ("sheet" + std::to_string(gen) + ".json.bz2")).string();
         outFile = fopen(outPath.c_str(), "wb");
         fwrite(compData, 1, compressedSize, outFile);
         fclose(outFile);
