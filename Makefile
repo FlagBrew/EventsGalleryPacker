@@ -7,8 +7,13 @@ CXX	:=	g++
 SOURCES				:=	source
 INCLUDES			:=	include
 NOFORMAT_INCLUDES	:=	core/include \
-						core/memecrypto \
-						core/swshcrypto
+						core/include/enums \
+						core/include/personal \
+						core/include/pkx \
+						core/include/sav \
+						core/include/utils \
+						core/include/wcx \
+						core/memecrypto
 
 NOFORMAT_SOURCES	:=	core/source/i18n \
 						core/source/personal \
@@ -16,7 +21,6 @@ NOFORMAT_SOURCES	:=	core/source/i18n \
 						core/source/sav \
 						core/source/utils \
 						core/source/wcx \
-						core/swshcrypto \
 						core/memecrypto
 
 CFILES		:=	$(patsubst ./%,%,$(foreach dir,$(SOURCES),$(call rwildcard,$(dir),*.c))) $(patsubst ./%,%,$(foreach dir,$(NOFORMAT_SOURCES),$(call rwildcard,$(dir),*.c)))
